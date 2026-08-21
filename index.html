@@ -433,8 +433,8 @@
             <div>
                 <label>👤 Ses Seçimi: </label>
                 <select id="voice-select">
-                    <option value="Microsoft Emel" selected>Microsoft Emel (Online Natural)</option>
-                    <option value="Microsoft Ahmet">Microsoft Ahmet (Online Natural)</option>
+                    <option value="Microsoft Emel" selected>Kadın</option>
+                    <option value="Microsoft Ahmet">Erkek</option>
                 </select>
             </div>
             <div class="volume-control">
@@ -601,7 +601,7 @@
         const statusLabel = document.getElementById(statusId);
         card.classList.remove('status-warning', 'status-critical');
         if (diff === 0) { card.classList.add('status-critical'); statusLabel.innerText = "🔴 Servis Dışı"; }
-        else if (diff > 0 && diff <= 2) { card.classList.add('status-critical'); statusLabel.innerText = "🔴 Kritik (" + diff + " dk)"; }
+        else if (diff > 0 && diff <= 2) { card.classList.add('status-critical'); statusLabel.innerText = "🔴 Çok Az Kaldı (" + diff + " dk)"; }
         else if (diff > 2 && diff <= 10) { card.classList.add('status-warning'); statusLabel.innerText = "🟡 Yaklaşıyor (" + diff + " dk)"; }
         else statusLabel.innerText = "🟢 Normal";
     }
@@ -626,7 +626,7 @@
         const countdownBox = document.getElementById('countdown-text');
         if (uskInfo.diff >= 0 && sulInfo.diff >= 0) {
             const minDiff = Math.min(uskInfo.diff, sulInfo.diff);
-            countdownBox.innerText = `Sonraki servis dışı duruma yaklaşık ${minDiff} dakika kaldı.`;
+            countdownBox.innerText = `Sonraki servis dışına yaklaşık ${minDiff} dakika kaldı.`;
         } else {
             countdownBox.innerText = `Bugünkü tüm servis dışı saatleri tamamlandı. Sonraki seferler yarın.`;
         }
