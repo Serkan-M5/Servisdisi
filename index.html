@@ -217,6 +217,23 @@
             font-weight: bold;
             color: var(--m5-purple);
             font-size: 15px;
+
+        }
+        .m5-circle-logo {
+            background-color: #6b215c;
+            color: #ffffff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+
         }
 
         /* Ayarlar Menüsü (Ses & Filtre) */
@@ -378,9 +395,10 @@
             <span id="current-date-time">📅 Yükleniyor...[cite: 2]</span>
             <span id="day-type-badge" style="font-weight: bold; color: var(--m5-purple);"></span>
         </div>
-
-        <h3 style="margin: 0 0 10px 0; font-size: 18px;">🟪 M5 Servis Dışı Durumları</h3>
-        
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span class="m5-circle-logo">M5</span>
+        <h3 style="margin: 0; font-size: 18px; line-height: 1;">M5 Servis Dışı Durumları</h3> 
+        </div>
         <div class="stations-grid">
             <!-- Üsküdar Kartı -->
             <div class="station-card" id="uskudar-card">
