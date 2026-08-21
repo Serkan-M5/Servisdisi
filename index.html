@@ -283,7 +283,6 @@
             accent-color: var(--m5-purple);
             cursor: pointer;
         }
-        }
 
         /* Alarm Ekranı - Yanıp Sönen Kırmızı Arka Plan */
         #alert-box {
@@ -392,33 +391,31 @@
 
     <div id="info-panel">
         <div class="header-info">
-            <span id="current-date-time">📅 Yükleniyor...[cite: 2]</span>
+            <span id="current-date-time">📅 Yükleniyor...</span>
             <span id="day-type-badge" style="font-weight: bold; color: var(--m5-purple);"></span>
         </div>
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <span class="m5-circle-logo">M5</span>
-        <h3 style="margin: 0; font-size: 18px; line-height: 1;">M5 Servis Dışı Durumları</h3> 
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span class="m5-circle-logo">M5</span>
+            <h3 style="margin: 0; font-size: 18px; line-height: 1;">M5 Servis Dışı Durumları</h3> 
         </div>
         <div class="stations-grid">
-            <!-- Üsküdar Kartı -->
             <div class="station-card" id="uskudar-card">
-                <h4>Üsküdar İstasyonu</h4>
+                <h4>Üsküdar</h4>
                 <span class="status-label" id="uskudar-status">🟢 Normal</span>
-                <span class="next-time" id="uskudar-next">Bekleniyor...[cite: 2]</span>
+                <span class="next-time" id="uskudar-next">Bekleniyor...</span>
                 <div class="all-times"><strong>Tüm Saatler:</strong> <span id="uskudar-list"></span></div>
             </div>
 
-            <!-- Sultanbeyli Kartı -->
             <div class="station-card" id="sultanbeyli-card">
-                <h4>Sultanbeyli İstasyonu</h4>
+                <h4>Sultanbeyli</h4>
                 <span class="status-label" id="sultanbeyli-status">🟢 Normal</span>
-                <span class="next-time" id="sultanbeyli-next">Bekleniyor...[cite: 2]</span>
+                <span class="next-time" id="sultanbeyli-next">Bekleniyor...</span>
                 <div class="all-times"><strong>Tüm Saatler:</strong> <span id="sultanbeyli-list"></span></div>
             </div>
         </div>
 
         <div class="countdown-box" id="countdown-text">
-            Bir sonraki servis dışı durumu hesaplanıyor...[cite: 2]
+            Sistem aktif ve takip ediliyor.
         </div>
 
         <div class="preferences">
@@ -432,6 +429,14 @@
                     <option value="gong">Nazik Gong</option>
                 </select>
             </div>
+            <!-- Varsayılan Ses Emel Olarak Ayarlandı -->
+            <div>
+                <label>👤 Ses Seçimi: </label>
+                <select id="voice-select">
+                    <option value="Microsoft Emel" selected>Microsoft Emel (Online Natural)</option>
+                    <option value="Microsoft Ahmet">Microsoft Ahmet (Online Natural)</option>
+                </select>
+            </div>
             <div class="volume-control">
                 <label>Ses: </label>
                 <button id="mute-toggle" title="Sesi Aç/Kapat">🔊</button>
@@ -442,7 +447,6 @@
     </div>
 </div>
 
-<!-- Alarm Tam Ekran Katmanı -->
 <div id="alert-box">
     <div class="alert-card">
         <div class="alert-icon">🚨</div>
@@ -454,101 +458,81 @@
 </div>
 
 <script>
-    // Servis Dışı Saat Tanımlamaları (Gün Tipine Göre)
     const scheduleData = {
-        weekday: {
-            uskudar: ["08:46", "09:06"],
-            sultanbeyli: ["08:47", "09:13"]
-        },
-        saturday: {
-            uskudar: ["20:46", "21:56"],
-            sultanbeyli: ["20:07", "20:56", "22:07"]
-        },
-        sunday: {
-            uskudar: ["19:45", "21:53"],
-            sultanbeyli: ["20:09", "22:04"]
-        }
+        weekday: { uskudar: ["08:46", "09:06"], sultanbeyli: ["08:47", "09:13"] },
+        saturday: { uskudar: ["20:46", "21:56"], sultanbeyli: ["20:07", "20:56", "22:07"] },
+        sunday: { uskudar: ["19:45", "21:53"], sultanbeyli: ["20:09", "22:04"] }
     };
 
     const dayNames = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
-
-    // Bugünün gün numarasına (0=Pazar...6=Cumartesi) göre doğru tarifeyi döndürür
     function getTodaysSchedule(day) {
         if (day === 0) return scheduleData.sunday;
         if (day === 6) return scheduleData.saturday;
         return scheduleData.weekday;
     }
 
-    // Tarayıcı Bildirim İzni
-    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-        Notification.requestPermission();
-    }
+    if (Notification.permission !== "granted" && Notification.permission !== "denied") Notification.requestPermission();
 
     let audioCtx = null;
     let alarmActive = false;
     let alarmTimer = null;
     let beepInterval = null;
-
-    // Ses Seviyesi Durumu
-    let volumeLevel = 70; // 0-100
+    let volumeLevel = 70;
     let isMuted = false;
 
-    function getEffectiveVolume() {
-        return isMuted ? 0 : volumeLevel / 100;
-    }
+    function getEffectiveVolume() { return isMuted ? 0 : volumeLevel / 100; }
 
-    // 5 Farklı Bildirim Tonu Tanımı (her biri nota dizisinden oluşur)
     const toneConfigs = {
-        classic: { notes: [{ freq: 587.33, duration: 0.45 }] },                                    // Klasik Bip
-        soft:    { notes: [{ freq: 440, duration: 0.7 }] },                                          // Yumuşak Zil
-        double:  { notes: [{ freq: 523.25, duration: 0.3 }, { freq: 659.25, duration: 0.45, delay: 0.28 }] }, // Çift Ton (Ding-Dong)
-        alert:   { notes: [{ freq: 783.99, duration: 0.4 }, { freq: 783.99, duration: 0.4, delay: 0.45 }] },  // Uyarı Zili
-        gong:    { notes: [{ freq: 330, duration: 1.1 }] }                                           // Nazik Gong
+        classic: { notes: [{ freq: 587.33, duration: 0.45 }] },
+        soft:    { notes: [{ freq: 440, duration: 0.7 }] },
+        double:  { notes: [{ freq: 523.25, duration: 0.3 }, { freq: 659.25, duration: 0.45, delay: 0.28 }] },
+        alert:   { notes: [{ freq: 783.99, duration: 0.4 }, { freq: 783.99, duration: 0.4, delay: 0.45 }] },
+        gong:    { notes: [{ freq: 330, duration: 1.1 }] }
     };
 
-    // Yumuşak Bildirim Sesi (Web Audio API) - konuşmadan hemen sonra çalınır
     function playSoftChime() {
         const volume = getEffectiveVolume();
-        if (volume <= 0) return; // Sesi kapalıysa hiçbir ton çalma
-
+        if (volume <= 0) return;
         try {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') audioCtx.resume();
-
             const toneKey = document.getElementById('sound-type').value;
             const config = toneConfigs[toneKey] || toneConfigs.classic;
             const peak = 0.15 * volume;
-
             config.notes.forEach(note => {
                 const startTime = audioCtx.currentTime + (note.delay || 0);
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(note.freq, startTime);
-
-                // Yumuşak giriş/çıkış (envelope) - sert bip yerine nazik bir "ding" efekti
                 gain.gain.setValueAtTime(0, startTime);
                 gain.gain.linearRampToValueAtTime(peak, startTime + 0.04);
                 gain.gain.linearRampToValueAtTime(0, startTime + note.duration);
-
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
                 osc.start(startTime);
                 osc.stop(startTime + note.duration + 0.05);
             });
-        } catch (e) {
-            console.log("Ses çalınamadı: ", e);
-        }
+        } catch (e) { console.log("Ses çalınamadı: ", e); }
     }
 
-    // Sesli Asistan Anonsu (Text-to-Speech) - bitince opsiyonel callback çalışır
     function speakWarning(text, onEndCallback) {
         if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // Önceki ses varsa kes
+            window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'tr-TR';
             utterance.volume = getEffectiveVolume();
+            
+            const selectedVoiceName = document.getElementById('voice-select').value;
+            const voices = window.speechSynthesis.getVoices();
+            
+            if (selectedVoiceName) {
+                const selectedVoice = voices.find(v => v.name.includes(selectedVoiceName));
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                }
+            }
+
             if (onEndCallback) {
                 utterance.onend = onEndCallback;
                 utterance.onerror = onEndCallback;
@@ -559,21 +543,16 @@
         }
     }
 
+    window.speechSynthesis.onvoiceschanged = () => {
+        console.log("Sesler yüklendi.");
+    };
+
     let countdownInterval = null;
-
-    // Sözlü Anons + Yumuşak Ses Döngüsü (3 saniyede bir tekrarlanır)
-    function alarmCycle(stationName) {
-        speakWarning(stationName + " istasyonu servis dışı", () => {
-            playSoftChime();
-        });
-    }
-
-    // Ekrandaki geri sayımı başlat
+    function alarmCycle(stationName) { speakWarning(stationName + " istasyonu servis dışı", () => { playSoftChime(); }); }
     function startCountdownDisplay(totalSeconds) {
         let remaining = totalSeconds;
         const countdownEl = document.getElementById('alert-countdown');
         if (countdownEl) countdownEl.innerText = remaining;
-
         if (countdownInterval) clearInterval(countdownInterval);
         countdownInterval = setInterval(() => {
             remaining -= 1;
@@ -582,270 +561,107 @@
         }, 1000);
     }
 
-    // 10 Saniye Süren Alarmı Tetikle
     function triggerAlarm(stationName) {
-        // Eğer zaten alarm çalıyorsa testi üste üste bindirmemek için yoksayabiliriz
         if (alarmActive) return;
         alarmActive = true;
-
         const msg = stationName + " İSTASYONU SERVİS DIŞI!";
         document.getElementById('alert-message').innerText = msg;
-
         const alertBox = document.getElementById('alert-box');
         alertBox.style.display = 'flex';
         alertBox.classList.add('flashing');
-
-        // İlk anons hemen, sonrasında her 3 saniyede bir tekrar
         alarmCycle(stationName);
         beepInterval = setInterval(() => alarmCycle(stationName), 3000);
-
-        // Ekran geri sayımı (10 sn)
         startCountdownDisplay(10);
-
-        // Mobil Titreşim
-        if ('vibrate' in navigator) {
-            navigator.vibrate([200, 100, 200, 100, 200]);
-        }
-
-        showPersistentNotification("M5 Metro Uyarı Sistemi", msg);
-
-        // 10 Saniye sonra alarmı otomatik kapat
+        if ('vibrate' in navigator) navigator.vibrate([200, 100, 200, 100, 200]);
         if (alarmTimer) clearTimeout(alarmTimer);
-        alarmTimer = setTimeout(() => {
-            dismissAlert();
-        }, 10000);
+        alarmTimer = setTimeout(() => { dismissAlert(); }, 10000);
     }
 
     function dismissAlert() {
         const alertBox = document.getElementById('alert-box');
         alertBox.style.display = 'none';
         alertBox.classList.remove('flashing');
-
         if (beepInterval) clearInterval(beepInterval);
         if (alarmTimer) clearTimeout(alarmTimer);
         if (countdownInterval) clearInterval(countdownInterval);
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-
-        // Aynı dakikada üst üste tetiklenmeyi önlemek için kısa bir süre sonra kilidi aç
         setTimeout(() => { alarmActive = false; }, 5000);
     }
 
-    // Sonraki Saati ve Geri Sayımı Hesapla
     function getNextTimeInfo(timesArray, currentTimeStr) {
         let currentMinutes = timeToMinutes(currentTimeStr);
-        let futureTimes = timesArray.map(t => ({ time: t, mins: timeToMinutes(t) }))
-                                     .filter(item => item.mins >= currentMinutes);
-        
-        if (futureTimes.length > 0) {
-            let diff = futureTimes[0].mins - currentMinutes;
-            return { next: futureTimes[0].time, diff: diff };
-        } else {
-            return { next: timesArray[0] + " (Yarın)", diff: -1 };
-        }
+        let futureTimes = timesArray.map(t => ({ time: t, mins: timeToMinutes(t) })).filter(item => item.mins >= currentMinutes);
+        return futureTimes.length > 0 ? { next: futureTimes[0].time, diff: futureTimes[0].mins - currentMinutes } : { next: timesArray[0] + " (Yarın)", diff: -1 };
     }
 
-    function timeToMinutes(tStr) {
-        const parts = tStr.split(":");
-        return parseInt(parts[0]) * 60 + parseInt(parts[1]);
-    }
+    function timeToMinutes(tStr) { const parts = tStr.split(":"); return parseInt(parts[0]) * 60 + parseInt(parts[1]); }
 
-    // Kart Rengini Duruma Göre Güncelle (Yeşil / Sarı / Kırmızı)
     function updateCardStatus(cardId, statusId, diff) {
         const card = document.getElementById(cardId);
         const statusLabel = document.getElementById(statusId);
         card.classList.remove('status-warning', 'status-critical');
-
-        if (diff === 0) {
-            card.classList.add('status-critical');
-            statusLabel.innerText = "🔴 Servis Dışı";
-        } else if (diff > 0 && diff <= 2) {
-            card.classList.add('status-critical');
-            statusLabel.innerText = "🔴 Kritik (" + diff + " dk)";
-        } else if (diff > 2 && diff <= 10) {
-            card.classList.add('status-warning');
-            statusLabel.innerText = "🟡 Yaklaşıyor (" + diff + " dk)";
-        } else {
-            statusLabel.innerText = "🟢 Normal";
-        }
+        if (diff === 0) { card.classList.add('status-critical'); statusLabel.innerText = "🔴 Servis Dışı"; }
+        else if (diff > 0 && diff <= 2) { card.classList.add('status-critical'); statusLabel.innerText = "🔴 Kritik (" + diff + " dk)"; }
+        else if (diff > 2 && diff <= 10) { card.classList.add('status-warning'); statusLabel.innerText = "🟡 Yaklaşıyor (" + diff + " dk)"; }
+        else statusLabel.innerText = "🟢 Normal";
     }
 
-    // Ana Güncelleme Döngüsü
     function updateSystem() {
         const now = new Date();
-        const hours = now.getHours().toString().padStart(2, '0');
-        const minutes = now.getMinutes().toString().padStart(2, '0');
-        const seconds = now.getSeconds().toString().padStart(2, '0');
-        const timeStr = `${hours}:${minutes}`;
-
-        document.getElementById('current-date-time').innerText = `📅 ${now.toLocaleDateString('tr-TR')} | ⏰ ${timeStr}:${seconds}`;
-        
+        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        document.getElementById('current-date-time').innerText = `📅 ${now.toLocaleDateString('tr-TR')} | ⏰ ${timeStr}:${now.getSeconds().toString().padStart(2, '0')}`;
         const day = now.getDay();
-        const isWeekend = (day === 0 || day === 6);
-        const dayTypeBadge = document.getElementById('day-type-badge');
-        const dayName = dayNames[day];
-
-        if (isWeekend) {
-            dayTypeBadge.innerText = `🏖️ Hafta Sonu (${dayName})`;
-        } else {
-            dayTypeBadge.innerText = `💼 Hafta İçi (${dayName})`;
-        }
-
-        // Bugüne ait tarifeyi çek (Hafta İçi / Cumartesi / Pazar)
+        document.getElementById('day-type-badge').innerText = (day === 0 || day === 6) ? `🏖️ Hafta Sonu (${dayNames[day]})` : `💼 Hafta İçi (${dayNames[day]})`;
         const todaysSchedule = getTodaysSchedule(day);
-        const uskudarTimes = todaysSchedule.uskudar;
-        const sultanbeyliTimes = todaysSchedule.sultanbeyli;
-
-        document.getElementById('uskudar-list').innerText = uskudarTimes.join(", ");
-        document.getElementById('sultanbeyli-list').innerText = sultanbeyliTimes.join(", ");
-
-        const uskInfo = getNextTimeInfo(uskudarTimes, timeStr);
-        const sulInfo = getNextTimeInfo(sultanbeyliTimes, timeStr);
-
+        document.getElementById('uskudar-list').innerText = todaysSchedule.uskudar.join(", ");
+        document.getElementById('sultanbeyli-list').innerText = todaysSchedule.sultanbeyli.join(", ");
+        const uskInfo = getNextTimeInfo(todaysSchedule.uskudar, timeStr);
+        const sulInfo = getNextTimeInfo(todaysSchedule.sultanbeyli, timeStr);
         document.getElementById('uskudar-next').innerText = uskInfo.next;
         document.getElementById('sultanbeyli-next').innerText = sulInfo.next;
-
         updateCardStatus('uskudar-card', 'uskudar-status', uskInfo.diff);
         updateCardStatus('sultanbeyli-card', 'sultanbeyli-status', sulInfo.diff);
-
-        let closestDiff = 99999;
-        let closestStation = "";
-
-        if (uskInfo.diff >= 0 && uskInfo.diff < closestDiff) {
-            closestDiff = uskInfo.diff;
-            closestStation = "Üsküdar";
-        }
-        if (sulInfo.diff >= 0 && sulInfo.diff < closestDiff) {
-            closestDiff = sulInfo.diff;
-            closestStation = "Sultanbeyli";
-        }
-
-        const countdownEl = document.getElementById('countdown-text');
-        if (closestDiff !== 99999 && closestDiff > 0) {
-            countdownEl.innerText = `⏳ En yakın servis dışı: ${closestStation} seferine son ${closestDiff} dakika`;
-        } else if (closestDiff === 0) {
-            countdownEl.innerText = `🚨 Şuan servis dışı durumu aktif!`;
+        
+        // Dinamik durum mesajı güncellemesi
+        const countdownBox = document.getElementById('countdown-text');
+        if (uskInfo.diff >= 0 && sulInfo.diff >= 0) {
+            const minDiff = Math.min(uskInfo.diff, sulInfo.diff);
+            countdownBox.innerText = `Sonraki servis dışı duruma yaklaşık ${minDiff} dakika kaldı.`;
         } else {
-            countdownEl.innerText = `🌙 Bugün için planlanan başka servis dışı saat kalmadı.`;
+            countdownBox.innerText = `Bugünkü tüm servis dışı saatleri tamamlandı. Sonraki seferler yarın.`;
         }
 
-        // Bugünün tarifesine göre saat eşleşmelerini kontrol et ve alarmı tetikle (her gün geçerli)
         if (!alarmActive) {
-            if (uskudarTimes.includes(timeStr)) {
-                triggerAlarm("ÜSKÜDAR");
-            } else if (sultanbeyliTimes.includes(timeStr)) {
-                triggerAlarm("SULTANBEYLİ");
-            }
+            if (todaysSchedule.uskudar.includes(timeStr)) triggerAlarm("ÜSKÜDAR");
+            else if (todaysSchedule.sultanbeyli.includes(timeStr)) triggerAlarm("SULTANBEYLİ");
         }
     }
 
-    // Koyu Mod Toggle
     const themeToggleBtn = document.getElementById('theme-toggle');
     themeToggleBtn.addEventListener('click', () => {
         const htmlElement = document.documentElement;
         if (htmlElement.getAttribute('data-theme') === 'dark') {
             htmlElement.removeAttribute('data-theme');
             themeToggleBtn.innerText = "🌙 Koyu Mod";
-            localStorage.setItem('metroAppTheme', 'light');
         } else {
             htmlElement.setAttribute('data-theme', 'dark');
             themeToggleBtn.innerText = "☀️ Açık Mod";
-            localStorage.setItem('metroAppTheme', 'dark');
         }
     });
 
-    // Ses Tipi Tercihini Kaydet
-    document.getElementById('sound-type').addEventListener('change', function () {
-        localStorage.setItem('metroAppSound', this.value);
-    });
-
-    // Ses Seviyesi ve Sessize Alma Kontrolleri
     const volumeSlider = document.getElementById('volume-slider');
     const muteToggleBtn = document.getElementById('mute-toggle');
-
-    function updateMuteIcon() {
-        if (isMuted || volumeLevel === 0) {
-            muteToggleBtn.innerText = "🔇";
-        } else if (volumeLevel < 50) {
-            muteToggleBtn.innerText = "🔉";
-        } else {
-            muteToggleBtn.innerText = "🔊";
-        }
-    }
-
     volumeSlider.addEventListener('input', function () {
         volumeLevel = parseInt(this.value, 10);
-        if (volumeLevel > 0 && isMuted) {
-            isMuted = false; // Kaydırıcı hareket ettirilince sessiz mod otomatik kapansın
-        }
-        localStorage.setItem('metroAppVolume', volumeLevel);
-        localStorage.setItem('metroAppMuted', isMuted ? '1' : '0');
-        updateMuteIcon();
+        if (volumeLevel > 0) isMuted = false;
+        muteToggleBtn.innerText = (isMuted || volumeLevel === 0) ? "🔇" : (volumeLevel < 50 ? "🔉" : "🔊");
     });
-
     muteToggleBtn.addEventListener('click', function () {
         isMuted = !isMuted;
-        localStorage.setItem('metroAppMuted', isMuted ? '1' : '0');
-        updateMuteIcon();
+        muteToggleBtn.innerText = (isMuted || volumeLevel === 0) ? "🔇" : (volumeLevel < 50 ? "🔉" : "🔊");
     });
 
-    // Kaydedilmiş Tercihleri Yükle
-    function loadSavedPreferences() {
-        const savedTheme = localStorage.getItem('metroAppTheme');
-        if (savedTheme === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            themeToggleBtn.innerText = "☀️ Açık Mod";
-        }
-
-        const savedSound = localStorage.getItem('metroAppSound');
-        if (savedSound && toneConfigs[savedSound]) {
-            document.getElementById('sound-type').value = savedSound;
-        }
-
-        const savedVolume = localStorage.getItem('metroAppVolume');
-        if (savedVolume !== null) {
-            volumeLevel = parseInt(savedVolume, 10);
-            volumeSlider.value = volumeLevel;
-        }
-
-        const savedMuted = localStorage.getItem('metroAppMuted');
-        isMuted = savedMuted === '1';
-
-        updateMuteIcon();
-    }
-
-    // Otomatik Başlatma
-    window.onload = () => {
-        loadSavedPreferences();
-        updateSystem();
-        setInterval(updateSystem, 1000);
-    };
-
-    // PWA: Service Worker Kaydı (arka planda/sekme kapalıyken bildirim desteği için)
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('Service Worker kayıtlı:', reg.scope))
-                .catch(err => console.log('Service Worker kaydı başarısız:', err));
-        });
-    }
-
-    // Service Worker üzerinden daha kalıcı bildirim göster
-    function showPersistentNotification(title, body) {
-        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-            navigator.serviceWorker.ready.then(reg => {
-                reg.showNotification(title, {
-                    body: body,
-                    icon: 'icon-192.png',
-                    badge: 'icon-192.png',
-                    vibrate: [200, 100, 200, 100, 200],
-                    tag: 'metro-alert',
-                    requireInteraction: true
-                });
-            });
-        } else if (Notification.permission === "granted") {
-            new Notification(title, { body: body });
-        }
-    }
+    window.onload = () => { updateSystem(); setInterval(updateSystem, 1000); };
 </script>
 
 </body>
