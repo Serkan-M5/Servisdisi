@@ -219,7 +219,6 @@
             margin-bottom: 10px;
         }
 
-        /* ANLIK KONUM KART TASARIMI */
         .live-position-box {
             background: rgba(92, 49, 92, 0.06);
             border: 1px solid var(--border-color);
@@ -451,7 +450,7 @@
             <h3 style="margin: 0; font-size: 18px; line-height: 1;">M5 Servis Dışı Durumları</h3> 
         </div>
         <div class="stations-grid">
-            <!-- Sol Sütun: Sultanbeyli Çıkışlı (Üsküdar Servis Dışı) -->
+            <!-- Sol Sütun: Sultanbeyli Çıkışlı (Üsküdar Servis Dışı) -> Hat 2 -->
             <div class="station-card" id="sultanbeyli-card">
                 <div>
                     <h4>Üsküdar Servis Dışı</h4>
@@ -460,7 +459,6 @@
                     <div class="all-times"><strong>Kalkış Saatleri:</strong> <span id="sultanbeyli-list"></span></div>
                 </div>
 
-                <!-- Sadece Anlık Konum Kutusu -->
                 <div class="live-position-box" id="sultanbeyli-live-box">
                     <div class="live-position-header">📍 Mevcut Tren Konumu</div>
                     <div class="live-station-name" id="sultanbeyli-live-station">Bekleniyor...</div>
@@ -468,7 +466,7 @@
                 </div>
             </div>
 
-            <!-- Sağ Sütun: Üsküdar Çıkışlı (Sultanbeyli Servis Dışı) -->
+            <!-- Sağ Sütun: Üsküdar Çıkışlı (Sultanbeyli Servis Dışı) -> Hat 1 -->
             <div class="station-card" id="uskudar-card">
                 <div>
                     <h4>Sultanbeyli Servis Dışı</h4>
@@ -477,7 +475,6 @@
                     <div class="all-times"><strong>Kalkış Saatleri:</strong> <span id="uskudar-list"></span></div>
                 </div>
                 
-                <!-- Sadece Anlık Konum Kutusu -->
                 <div class="live-position-box" id="uskudar-live-box">
                     <div class="live-position-header">📍 Mevcut Tren Konumu</div>
                     <div class="live-station-name" id="uskudar-live-station">Bekleniyor...</div>
@@ -802,8 +799,8 @@
             : { run: itemsArray[0].run, next: itemsArray[0].alarmTime + " (Yarın)", diff: -1 };
     }
 
-    // SADECE MEVCUT KONUMU HESAPLAYAN VE GÜNCELLEYEN İŞLETME FONKSİYONU
-    function updateLivePositionDisplay(prefix, scheduleList, stationList, nowDate) {
+    // MEVCUT KONUM GÖSTERGE VE HAT NO (1 veya 2) ENTEGRASYONU
+    function updateLivePositionDisplay(prefix, scheduleList, stationList, nowDate, trackNumber) {
         const stationEl = document.getElementById(`${prefix}-live-station`);
         const descEl = document.getElementById(`${prefix}-live-desc`);
         
@@ -813,7 +810,6 @@
         let activeRun = null;
         let nextUpcomingRun = null;
 
-        // Hat üzerindeki aktif treni veya sonraki treni bul
         for (let item of scheduleList) {
             const [h, m] = item.time.split(":").map(Number);
             const startSec = h * 3600 + m * 60;
@@ -828,7 +824,6 @@
         }
 
         if (activeRun) {
-            // Hat üzerinde hareket halinde tren var
             for (let i = 0; i < stationList.length; i++) {
                 let st = stationList[i];
                 let currentStArrivalSec = activeRun.startSec + st.offset;
@@ -841,25 +836,22 @@
                         let mins = Math.floor(remainingToNext / 60);
                         let secs = remainingToNext % 60;
                         
-                        stationEl.innerHTML = `🚆 ${st.name}`;
-                        descEl.innerHTML = `<strong>${activeRun.run}</strong> aktif hatta. Sonraki: <strong>${nextSt.name}</strong> (${mins > 0 ? mins + ' dk ' : ''}${secs} sn sonra)`;
+                        stationEl.innerHTML = `🚆 ${st.name} ${trackNumber}`;
+                        descEl.innerHTML = `<strong>${activeRun.run}</strong> aktif hatta. Sonraki: <strong>${nextSt.name} ${trackNumber}</strong> (${mins > 0 ? mins + ' dk ' : ''}${secs} sn sonra)`;
                         return;
                     }
                 } else {
-                    // Son durak
-                    stationEl.innerHTML = `🏁 ${st.name} (Son İstasyon)`;
+                    stationEl.innerHTML = `🏁 ${st.name} ${trackNumber} (Son İstasyon)`;
                     descEl.innerHTML = `<strong>${activeRun.run}</strong> seferini tamamlamak üzere.`;
                     return;
                 }
             }
         } else if (nextUpcomingRun) {
-            // Hat üzerinde tren yok, sıradaki tren bekleniyor
             let diffSec = nextUpcomingRun.startSec - nowSec;
             let diffMins = Math.floor(diffSec / 60);
-            stationEl.innerHTML = `⏳ ${stationList[0].name} (Kalkış Bekleniyor)`;
+            stationEl.innerHTML = `⏳ ${stationList[0].name} ${trackNumber} (Kalkış Bekleniyor)`;
             descEl.innerHTML = `Sıradaki <strong>${nextUpcomingRun.run}</strong> çıkışı: <strong>${nextUpcomingRun.time}</strong> (${diffMins} dk kaldı)`;
         } else {
-            // Günlük seferler bitti
             stationEl.innerHTML = `🌙 Seferler Tamamlandı`;
             descEl.innerHTML = `Sıradaki sefer yarın <strong>${scheduleList[0].time}</strong> [${scheduleList[0].run}]`;
         }
@@ -880,7 +872,6 @@
         const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
         document.getElementById('current-date-time').innerText = `📅 ${now.toLocaleDateString('tr-TR')} | ⏰ ${timeStr}:${now.getSeconds().toString().padStart(2, '0')}`;
         
-        // Tatil Kontrolü
         const holidayName = checkPublicHoliday(now);
         const holidayBadgeContainer = document.getElementById('holiday-badge-container');
         if (holidayName) {
@@ -889,7 +880,6 @@
             holidayBadgeContainer.innerHTML = '';
         }
 
-        // Aktif Tarife
         const activeScheduleInfo = getActiveSchedule(now);
         document.getElementById('day-type-badge').innerText = activeScheduleInfo.labelMode;
         
@@ -901,7 +891,6 @@
         const sultanbeyliAlarmItems = activeSchedule.sultanbeyli.map(i => ({ run: i.run, time: i.time, alarmTime: addMinutesToTimeStr(i.time, 45) }));
         const uskudarAlarmItems = activeSchedule.uskudar.map(i => ({ run: i.run, time: i.time, alarmTime: addMinutesToTimeStr(i.time, 45) }));
 
-        // Alarmlar ve kartlar
         const uskAlarmInfo = getNextAlarmInfo(uskudarAlarmItems, timeStr);
         const sulAlarmInfo = getNextAlarmInfo(sultanbeyliAlarmItems, timeStr);
         
@@ -911,9 +900,10 @@
         updateCardStatus('uskudar-card', 'uskudar-status', uskAlarmInfo.diff);
         updateCardStatus('sultanbeyli-card', 'sultanbeyli-status', sulAlarmInfo.diff);
 
-        // Canlı Anlık Konum Bilgilerini Güncelle
-        updateLivePositionDisplay("uskudar", activeSchedule.uskudar, STATIONS_USKUDAR_TO_SULTANBEYLI, now);
-        updateLivePositionDisplay("sultanbeyli", activeSchedule.sultanbeyli, STATIONS_SULTANBEYLI_TO_USKUDAR, now);
+        // Üsküdar Servis Dışı (Sultanbeyli çıkışlı tren) -> 2 (Hat 2)
+        // Sultanbeyli Servis Dışı (Üsküdar çıkışlı tren) -> 1 (Hat 1)
+        updateLivePositionDisplay("sultanbeyli", activeSchedule.sultanbeyli, STATIONS_SULTANBEYLI_TO_USKUDAR, now, 2);
+        updateLivePositionDisplay("uskudar", activeSchedule.uskudar, STATIONS_USKUDAR_TO_SULTANBEYLI, now, 1);
         
         const countdownBox = document.getElementById('countdown-text');
         if (uskAlarmInfo.diff >= 0 && sulAlarmInfo.diff >= 0) {
