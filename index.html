@@ -48,7 +48,6 @@
             text-align: center;
         }
 
-        /* Üst Kontroller ve Rozet */
         .top-bar {
             display: flex;
             justify-content: space-between;
@@ -106,7 +105,6 @@
             opacity: 0.9;
         }
 
-        /* Ana Panel */
         #info-panel {
             background: var(--panel-bg);
             padding: 25px;
@@ -125,10 +123,22 @@
             margin-bottom: 15px;
             font-size: 14px;
             flex-wrap: wrap;
-            gap: 5px;
+            gap: 8px;
         }
 
-        /* İstasyon Kartları */
+        .holiday-badge {
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
         .stations-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -141,18 +151,14 @@
             border: 1px solid var(--border-color);
             padding: 15px;
             border-radius: 10px;
+            transition: border-color 0.4s, box-shadow 0.4s;
+            border-left: 6px solid #27ae60;
         }
 
         .station-card h4 {
             margin: 0 0 8px 0;
             color: var(--m5-purple);
             font-size: 16px;
-        }
-
-        /* Durum Rengi Geçişleri: Normal / Yaklaşıyor / Kritik */
-        .station-card {
-            transition: border-color 0.4s, box-shadow 0.4s;
-            border-left: 6px solid #27ae60;
         }
 
         .station-card .status-label {
@@ -208,7 +214,43 @@
             line-height: 1.4;
         }
 
-        /* Geri Sayım ve Durum Alanı */
+        .route-details {
+            margin-top: 10px;
+            border-top: 1px dashed var(--border-color);
+            padding-top: 8px;
+        }
+
+        .route-details summary {
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            color: var(--m5-purple);
+        }
+
+        .route-table-wrapper {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 8px;
+            font-size: 11px;
+        }
+
+        .route-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .route-table td, .route-table th {
+            padding: 4px 6px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .route-table th {
+            background: rgba(92, 49, 92, 0.1);
+            position: sticky;
+            top: 0;
+        }
+
         .countdown-box {
             margin-top: 20px;
             padding: 12px;
@@ -218,8 +260,8 @@
             font-weight: bold;
             color: var(--m5-purple);
             font-size: 15px;
-
         }
+
         .m5-circle-logo {
             background-color: #6b215c;
             color: #ffffff;
@@ -234,10 +276,8 @@
             letter-spacing: -0.5px;
             flex-shrink: 0;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-
         }
 
-        /* Ayarlar Menüsü (Ses & Filtre) */
         .preferences {
             margin-top: 15px;
             display: flex;
@@ -285,7 +325,6 @@
             cursor: pointer;
         }
 
-        /* Alarm Ekranı - Yanıp Sönen Kırmızı Arka Plan */
         #alert-box {
             display: none;
             position: fixed;
@@ -306,7 +345,6 @@
             50% { background-color: rgba(224, 65, 52, 0.97); }
         }
 
-        /* Derli Toplu Bildirim Kartı */
         .alert-card {
             background: rgba(0, 0, 0, 0.32);
             backdrop-filter: blur(6px);
@@ -384,8 +422,8 @@
             <div class="pulse-dot"></div> Canlı Takip Ediliyor
         </div>
         <div class="settings-bar">
-            <button class="control-btn" onclick="triggerAlarm('ÜSKÜDAR')" style="background-color: #5c315c; color: white;">🔔 Üsküdar Test</button>
-            <button class="control-btn" onclick="triggerAlarm('SULTANBEYLİ')" style="background-color: #5c315c; color: white;">🔔 Sultanbeyli Test</button>
+            <button class="control-btn" onclick="triggerAlarm('Üsküdar Servis Dışı')" style="background-color: #5c315c; color: white;">🔔 Üsküdar Test</button>
+            <button class="control-btn" onclick="triggerAlarm('Sultanbeyli Servis Dışı')" style="background-color: #5c315c; color: white;">🔔 Sultanbeyli Test</button>
             <button class="control-btn" id="theme-toggle">🌙 Koyu Mod</button>
         </div>
     </div>
@@ -393,6 +431,7 @@
     <div id="info-panel">
         <div class="header-info">
             <span id="current-date-time">📅 Yükleniyor...</span>
+            <span id="holiday-badge-container"></span>
             <span id="day-type-badge" style="font-weight: bold; color: var(--m5-purple);"></span>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
@@ -400,18 +439,44 @@
             <h3 style="margin: 0; font-size: 18px; line-height: 1;">M5 Servis Dışı Durumları</h3> 
         </div>
         <div class="stations-grid">
-            <div class="station-card" id="uskudar-card">
-                <h4>Üsküdar</h4>
-                <span class="status-label" id="uskudar-status">🟢 Normal</span>
-                <span class="next-time" id="uskudar-next">Bekleniyor...</span>
-                <div class="all-times"><strong>Tüm Saatler:</strong> <span id="uskudar-list"></span></div>
-            </div>
-
+            <!-- Sol Sütun: Sultanbeyli Çıkışlı -->
             <div class="station-card" id="sultanbeyli-card">
-                <h4>Sultanbeyli</h4>
+                <h4>Üsküdar Servis Dışı</h4>
                 <span class="status-label" id="sultanbeyli-status">🟢 Normal</span>
                 <span class="next-time" id="sultanbeyli-next">Bekleniyor...</span>
-                <div class="all-times"><strong>Tüm Saatler:</strong> <span id="sultanbeyli-list"></span></div>
+                <div class="all-times"><strong>Kalkış Saatleri:</strong> <span id="sultanbeyli-list"></span></div>
+
+                <details class="route-details" open>
+                    <summary>Tren Konum Detayları / Saatleri</summary>
+                    <div class="route-table-wrapper">
+                        <table class="route-table" id="sultanbeyli-route-table">
+                            <thead>
+                                <tr><th>İstasyon</th><th>Run No</th><th>Varış Saati</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </details>
+            </div>
+
+            <!-- Sağ Sütun: Üsküdar Çıkışlı -->
+            <div class="station-card" id="uskudar-card">
+                <h4>Sultanbeyli Servis Dışı</h4>
+                <span class="status-label" id="uskudar-status">🟢 Normal</span>
+                <span class="next-time" id="uskudar-next">Bekleniyor...</span>
+                <div class="all-times"><strong>Kalkış Saatleri:</strong> <span id="uskudar-list"></span></div>
+                
+                <details class="route-details" open>
+                    <summary>Tren Konum Detayları / Saatleri</summary>
+                    <div class="route-table-wrapper">
+                        <table class="route-table" id="uskudar-route-table">
+                            <thead>
+                                <tr><th>İstasyon</th><th>Run No</th><th>Varış Saati</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </details>
             </div>
         </div>
 
@@ -421,7 +486,16 @@
 
         <div class="preferences">
             <div>
-                <label>🔊 Uyarı Sesi Tipi: </label>
+                <label>📅 Tarife Seçimi: </label>
+                <select id="schedule-mode-select" onchange="updateSystem()">
+                    <option value="auto" selected>Otomatik (Tarihe Göre)</option>
+                    <option value="weekday">Hafta İçi Tarifesi</option>
+                    <option value="saturday">Cumartesi Tarifesi</option>
+                    <option value="sunday">Pazar Tarifesi</option>
+                </select>
+            </div>
+            <div>
+                <label>🔊 Uyarı Sesi: </label>
                 <select id="sound-type">
                     <option value="classic">Çift Ton (Ding-Dong)</option>
                     <option value="soft">Yumuşak Zil</option>
@@ -430,7 +504,6 @@
                     <option value="gong">Nazik Gong</option>
                 </select>
             </div>
-            <!-- Varsayılan Ses Emel Olarak Ayarlandı -->
             <div>
                 <label>👤 Ses Seçimi: </label>
                 <select id="voice-select">
@@ -453,23 +526,122 @@
         <div class="alert-icon">🚨</div>
         <div id="alert-message">SERVİS DIŞI</div>
         <div class="alert-subtitle">Servis dışı durumu için trafikçiye sorun.</div>
-        <div class="alert-countdown">Otomatik kapanış: <span id="alert-countdown">10</span> sn</div>
+        <div class="alert-countdown">Otomatik kapanış: <span id="alert-countdown">11</span> sn</div>
         <button onclick="dismissAlert()">Uyarıyı Kapat</button>
     </div>
 </div>
 
 <script>
+    const STATIONS_SULTANBEYLI_TO_USKUDAR = [
+        { name: "Sultanbeyli", offset: 0 },
+        { name: "Hasanpaşa", offset: 120 },
+        { name: "Veysel Karani", offset: 239 },
+        { name: "Samandıra Merkez", offset: 390 },
+        { name: "Sancaktepe", offset: 506 },
+        { name: "Şehir Hastanesi", offset: 632 },
+        { name: "Sarıgazi", offset: 750 },
+        { name: "Meclis", offset: 876 },
+        { name: "Çekmeköy", offset: 992 },
+        { name: "Necip Fazıl", offset: 1102 },
+        { name: "Dudullu", offset: 1238 },
+        { name: "İmam Hatip Lisesi", offset: 1352 },
+        { name: "Altınşehir", offset: 1465 },
+        { name: "Ihlamurkuyu", offset: 1579 },
+        { name: "Çakmak", offset: 1699 },
+        { name: "Yamanevler", offset: 1808 },
+        { name: "Çarşı", offset: 1922 },
+        { name: "Ümraniye", offset: 2041 },
+        { name: "Bulgurlu", offset: 2176 },
+        { name: "Kısıklı", offset: 2314 },
+        { name: "Altunizade", offset: 2443 },
+        { name: "Bağlarbaşı", offset: 2572 },
+        { name: "Fıstıkağacı", offset: 2698 },
+        { name: "Üsküdar", offset: 2818 }
+    ];
+
+    const STATIONS_USKUDAR_TO_SULTANBEYLI = STATIONS_SULTANBEYLI_TO_USKUDAR.slice().reverse().map((s, idx, arr) => {
+        return {
+            name: s.name,
+            offset: arr[0].offset - s.offset
+        };
+    });
+
     const scheduleData = {
-        weekday: { uskudar: ["08:46", "09:06"], sultanbeyli: ["08:47", "09:13"] },
-        saturday: { uskudar: ["20:46", "21:56"], sultanbeyli: ["20:07", "20:56", "22:07"] },
-        sunday: { uskudar: ["19:45", "21:53"], sultanbeyli: ["20:09", "22:04"] }
+        weekday: { 
+            uskudar: [
+                { run: "Run 5", time: "08:00" },
+                { run: "Run 11", time: "08:26" },
+                { run: "Run 23", time: "18:55" },
+                { run: "Run 24", time: "19:21" },
+                { run: "Run 18", time: "20:05" }
+            ], 
+            sultanbeyli: [
+                { run: "Run 6", time: "07:59" },
+                { run: "Run 20", time: "08:19" },
+                { run: "Run 12", time: "18:44" },
+                { run: "Run 3", time: "19:10" },
+                { run: "Run 4", time: "19:58" },
+                { run: "Run 19", time: "21:15" }
+            ] 
+        },
+        saturday: { 
+            uskudar: [
+                { run: "Run 6", time: "19:19" },
+                { run: "Run 5", time: "20:10" },
+                { run: "Run 10", time: "21:20" }
+            ], 
+            sultanbeyli: [
+                { run: "Run 15", time: "18:54" },
+                { run: "Run 2", time: "20:01" },
+                { run: "Run 8", time: "21:11" }
+            ] 
+        },
+        sunday: { 
+            uskudar: [
+                { run: "Run 13", time: "19:20" },
+                { run: "Run 10", time: "21:17" }
+            ], 
+            sultanbeyli: [
+                { run: "Run 1", time: "19:00" },
+                { run: "Run 14", time: "21:08" }
+            ] 
+        }
+    };
+
+    const TURKEY_HOLIDAYS = {
+        "01-01": "Yılbaşı",
+        "04-23": "23 Nisan Ulusal Egemenlik ve Çocuk B.",
+        "05-01": "1 Mayıs Emek ve Dayanışma G.",
+        "05-19": "19 Mayıs Gençlik ve Spor B.",
+        "07-15": "15 Temmuz Demokrasi B.",
+        "08-30": "30 Ağustos Zafer Bayramı",
+        "10-29": "29 Ekim Cumhuriyet Bayramı"
     };
 
     const dayNames = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
-    function getTodaysSchedule(day) {
-        if (day === 0) return scheduleData.sunday;
-        if (day === 6) return scheduleData.saturday;
-        return scheduleData.weekday;
+    
+    function checkPublicHoliday(nowDate) {
+        const month = String(nowDate.getMonth() + 1).padStart(2, '0');
+        const day = String(nowDate.getDate()).padStart(2, '0');
+        const key = `${month}-${day}`;
+        return TURKEY_HOLIDAYS[key] || null;
+    }
+
+    function getActiveSchedule(nowDate) {
+        const selectMode = document.getElementById('schedule-mode-select')?.value || 'auto';
+        
+        if (selectMode !== 'auto') {
+            return {
+                schedule: scheduleData[selectMode],
+                labelMode: selectMode === 'weekday' ? '💼 Hafta İçi (Manuel)' : 
+                          (selectMode === 'saturday' ? '🏖️ Cumartesi (Manuel)' : '🏖️ Pazar (Manuel)')
+            };
+        }
+
+        const day = nowDate.getDay();
+        if (day === 0) return { schedule: scheduleData.sunday, labelMode: `🏖️ Pazar Tarifesi (${dayNames[day]})` };
+        if (day === 6) return { schedule: scheduleData.saturday, labelMode: `🏖️ Cumartesi Tarifesi (${dayNames[day]})` };
+        return { schedule: scheduleData.weekday, labelMode: `💼 Hafta İçi Tarifesi (${dayNames[day]})` };
     }
 
     if (Notification.permission !== "granted" && Notification.permission !== "denied") Notification.requestPermission();
@@ -478,8 +650,10 @@
     let alarmActive = false;
     let alarmTimer = null;
     let beepInterval = null;
+    let countdownInterval = null;
     let volumeLevel = 70;
     let isMuted = false;
+    let lastTriggeredMinute = "";
 
     function getEffectiveVolume() { return isMuted ? 0 : volumeLevel / 100; }
 
@@ -544,12 +718,10 @@
         }
     }
 
-    window.speechSynthesis.onvoiceschanged = () => {
-        console.log("Sesler yüklendi.");
-    };
+    function alarmCycle(targetName) { 
+        speakWarning(targetName, () => { playSoftChime(); }); 
+    }
 
-    let countdownInterval = null;
-    function alarmCycle(stationName) { speakWarning(stationName + " istasyonu servis dışı", () => { playSoftChime(); }); }
     function startCountdownDisplay(totalSeconds) {
         let remaining = totalSeconds;
         const countdownEl = document.getElementById('alert-countdown');
@@ -562,40 +734,64 @@
         }, 1000);
     }
 
-    function triggerAlarm(stationName) {
+    function triggerAlarm(targetName) {
         if (alarmActive) return;
         alarmActive = true;
-        const msg = stationName + " İSTASYONU SERVİS DIŞI!";
+        
+        const msg = targetName.toUpperCase();
         document.getElementById('alert-message').innerText = msg;
         const alertBox = document.getElementById('alert-box');
         alertBox.style.display = 'flex';
         alertBox.classList.add('flashing');
-        alarmCycle(stationName);
-        beepInterval = setInterval(() => alarmCycle(stationName), 3000);
-        startCountdownDisplay(10);
+        
+        startCountdownDisplay(11);
+        alarmCycle(targetName);
+        
+        beepInterval = setInterval(() => alarmCycle(targetName), 3000);
+        
         if ('vibrate' in navigator) navigator.vibrate([200, 100, 200, 100, 200]);
+        
         if (alarmTimer) clearTimeout(alarmTimer);
-        alarmTimer = setTimeout(() => { dismissAlert(); }, 10000);
+        alarmTimer = setTimeout(() => { 
+            dismissAlert(); 
+        }, 11000);
     }
 
     function dismissAlert() {
         const alertBox = document.getElementById('alert-box');
         alertBox.style.display = 'none';
         alertBox.classList.remove('flashing');
+        
         if (beepInterval) clearInterval(beepInterval);
         if (alarmTimer) clearTimeout(alarmTimer);
         if (countdownInterval) clearInterval(countdownInterval);
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-        setTimeout(() => { alarmActive = false; }, 5000);
+        
+        setTimeout(() => { alarmActive = false; }, 60000);
     }
 
-    function getNextTimeInfo(timesArray, currentTimeStr) {
-        let currentMinutes = timeToMinutes(currentTimeStr);
-        let futureTimes = timesArray.map(t => ({ time: t, mins: timeToMinutes(t) })).filter(item => item.mins >= currentMinutes);
-        return futureTimes.length > 0 ? { next: futureTimes[0].time, diff: futureTimes[0].mins - currentMinutes } : { next: timesArray[0] + " (Yarın)", diff: -1 };
+    function addMinutesToTimeStr(tStr, minsToAdd) {
+        const parts = tStr.split(":");
+        let totalMins = parseInt(parts[0]) * 60 + parseInt(parts[1]) + minsToAdd;
+        let h = Math.floor(totalMins / 60) % 24;
+        let m = totalMins % 60;
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
     }
 
     function timeToMinutes(tStr) { const parts = tStr.split(":"); return parseInt(parts[0]) * 60 + parseInt(parts[1]); }
+
+    function getNextTimeInfo(itemsArray, currentTimeStr) {
+        let currentMinutes = timeToMinutes(currentTimeStr);
+        let futureTimes = itemsArray.map(item => ({ 
+            run: item.run,
+            time: item.alarmTime || item.time, 
+            mins: timeToMinutes(item.alarmTime || item.time) 
+        })).filter(item => item.mins >= currentMinutes);
+
+        return futureTimes.length > 0 
+            ? { run: futureTimes[0].run, next: futureTimes[0].time, diff: futureTimes[0].mins - currentMinutes } 
+            : { run: itemsArray[0].run, next: (itemsArray[0].alarmTime || itemsArray[0].time) + " (Yarın)", diff: -1 };
+    }
 
     function updateCardStatus(cardId, statusId, diff) {
         const card = document.getElementById(cardId);
@@ -607,34 +803,88 @@
         else statusLabel.innerText = "🟢 Normal";
     }
 
+    function populateRouteTable(tableId, currentRunObj, stationList) {
+        const tbody = document.querySelector(`#${tableId} tbody`);
+        if (!tbody || !currentRunObj || !currentRunObj.time || currentRunObj.time.includes("Yarın")) {
+            if(tbody) tbody.innerHTML = "<tr><td colspan='3'>Aktif sefer yok</td></tr>";
+            return;
+        }
+
+        const cleanStartTime = currentRunObj.time.split(" ")[0];
+        const [hours, minutes] = cleanStartTime.split(":").map(Number);
+        const baseDate = new Date();
+        baseDate.setHours(hours, minutes, 0, 0);
+
+        let rowsHTML = "";
+        stationList.forEach(st => {
+            const arrivalDate = new Date(baseDate.getTime() + st.offset * 1000);
+            const formattedTime = arrivalDate.toTimeString().split(' ')[0];
+            rowsHTML += `<tr><td>${st.name}</td><td><strong>${currentRunObj.run || '-'}</strong></td><td><strong>${formattedTime}</strong></td></tr>`;
+        });
+
+        tbody.innerHTML = rowsHTML;
+    }
+
     function updateSystem() {
         const now = new Date();
         const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
         document.getElementById('current-date-time').innerText = `📅 ${now.toLocaleDateString('tr-TR')} | ⏰ ${timeStr}:${now.getSeconds().toString().padStart(2, '0')}`;
-        const day = now.getDay();
-        document.getElementById('day-type-badge').innerText = (day === 0 || day === 6) ? `🏖️ Hafta Sonu (${dayNames[day]})` : `💼 Hafta İçi (${dayNames[day]})`;
-        const todaysSchedule = getTodaysSchedule(day);
-        document.getElementById('uskudar-list').innerText = todaysSchedule.uskudar.join(", ");
-        document.getElementById('sultanbeyli-list').innerText = todaysSchedule.sultanbeyli.join(", ");
-        const uskInfo = getNextTimeInfo(todaysSchedule.uskudar, timeStr);
-        const sulInfo = getNextTimeInfo(todaysSchedule.sultanbeyli, timeStr);
-        document.getElementById('uskudar-next').innerText = uskInfo.next;
-        document.getElementById('sultanbeyli-next').innerText = sulInfo.next;
+        
+        // Resmi Tatil Kontrolü
+        const holidayName = checkPublicHoliday(now);
+        const holidayBadgeContainer = document.getElementById('holiday-badge-container');
+        if (holidayName) {
+            holidayBadgeContainer.innerHTML = `<span class="holiday-badge">🇹🇷 ${holidayName}</span>`;
+        } else {
+            holidayBadgeContainer.innerHTML = '';
+        }
+
+        // Aktif Tarife / Gün Bilgisi
+        const activeScheduleInfo = getActiveSchedule(now);
+        document.getElementById('day-type-badge').innerText = activeScheduleInfo.labelMode;
+        
+        const activeSchedule = activeScheduleInfo.schedule;
+        
+        document.getElementById('uskudar-list').innerHTML = activeSchedule.uskudar.map(i => `${i.run} (${i.time})`).join(", ");
+        document.getElementById('sultanbeyli-list').innerHTML = activeSchedule.sultanbeyli.map(i => `${i.run} (${i.time})`).join(", ");
+        
+        const sultanbeyliAlarmItems = activeSchedule.sultanbeyli.map(i => ({ run: i.run, time: i.time, alarmTime: addMinutesToTimeStr(i.time, 45) }));
+        const uskudarAlarmItems = activeSchedule.uskudar.map(i => ({ run: i.run, time: i.time, alarmTime: addMinutesToTimeStr(i.time, 45) }));
+
+        const uskInfo = getNextTimeInfo(uskudarAlarmItems, timeStr);
+        const sulInfo = getNextTimeInfo(sultanbeyliAlarmItems, timeStr);
+        
+        document.getElementById('uskudar-next').innerText = `Sultanbeyli Servis Dışı Varış: ${uskInfo.next} [${uskInfo.run}]`;
+        document.getElementById('sultanbeyli-next').innerText = `Üsküdar Servis Dışı Varış: ${sulInfo.next} [${sulInfo.run}]`;
+        
         updateCardStatus('uskudar-card', 'uskudar-status', uskInfo.diff);
         updateCardStatus('sultanbeyli-card', 'sultanbeyli-status', sulInfo.diff);
+
+        const currentUskudarObj = getNextTimeInfo(activeSchedule.uskudar, timeStr);
+        const currentSultanbeyliObj = getNextTimeInfo(activeSchedule.sultanbeyli, timeStr);
         
-        // Dinamik durum mesajı güncellemesi
+        populateRouteTable("uskudar-route-table", currentUskudarObj, STATIONS_USKUDAR_TO_SULTANBEYLI);
+        populateRouteTable("sultanbeyli-route-table", currentSultanbeyliObj, STATIONS_SULTANBEYLI_TO_USKUDAR);
+        
         const countdownBox = document.getElementById('countdown-text');
         if (uskInfo.diff >= 0 && sulInfo.diff >= 0) {
             const minDiff = Math.min(uskInfo.diff, sulInfo.diff);
-            countdownBox.innerText = `Sonraki servis dışına yaklaşık ${minDiff} dakika kaldı.`;
+            countdownBox.innerText = `Sonraki bildirim uyarısına yaklaşık ${minDiff} dakika kaldı.`;
         } else {
-            countdownBox.innerText = `Bugünkü tüm servis dışı saatleri tamamlandı. Sonraki seferler yarın.`;
+            countdownBox.innerText = `Bugünkü tüm servis dışı bildirimleri tamamlandı. Sonraki seferler yarın.`;
         }
 
-        if (!alarmActive) {
-            if (todaysSchedule.uskudar.includes(timeStr)) triggerAlarm("ÜSKÜDAR");
-            else if (todaysSchedule.sultanbeyli.includes(timeStr)) triggerAlarm("SULTANBEYLİ");
+        const sultanbeyliAlarmTimes = sultanbeyliAlarmItems.map(i => i.alarmTime);
+        const uskudarAlarmTimes = uskudarAlarmItems.map(i => i.alarmTime);
+
+        if (!alarmActive && lastTriggeredMinute !== timeStr) {
+            if (sultanbeyliAlarmTimes.includes(timeStr)) {
+                lastTriggeredMinute = timeStr;
+                triggerAlarm("Üsküdar Servis Dışı");
+            } else if (uskudarAlarmTimes.includes(timeStr)) {
+                lastTriggeredMinute = timeStr;
+                triggerAlarm("Sultanbeyli Servis Dışı");
+            }
         }
     }
 
