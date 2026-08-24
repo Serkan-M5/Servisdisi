@@ -153,6 +153,9 @@
             border-radius: 10px;
             transition: border-color 0.4s, box-shadow 0.4s;
             border-left: 6px solid #27ae60;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .station-card h4 {
@@ -170,6 +173,7 @@
             margin-bottom: 6px;
             background: rgba(39, 174, 96, 0.15);
             color: #27ae60;
+            align-self: flex-start;
         }
 
         .station-card.status-warning {
@@ -202,7 +206,7 @@
         }
 
         .next-time {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             margin-bottom: 8px;
             display: block;
@@ -212,43 +216,51 @@
             font-size: 12px;
             opacity: 0.8;
             line-height: 1.4;
+            margin-bottom: 10px;
         }
 
-        .route-details {
-            margin-top: 10px;
-            border-top: 1px dashed var(--border-color);
-            padding-top: 8px;
-        }
-
-        .route-details summary {
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            color: var(--m5-purple);
-        }
-
-        .route-table-wrapper {
-            max-height: 200px;
-            overflow-y: auto;
+        /* ANLIK KONUM KART TASARIMI */
+        .live-position-box {
+            background: rgba(92, 49, 92, 0.06);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
             margin-top: 8px;
+        }
+
+        [data-theme="dark"] .live-position-box {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .live-position-header {
             font-size: 11px;
+            font-weight: bold;
+            color: var(--m5-purple);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
-        .route-table {
-            width: 100%;
-            border-collapse: collapse;
+        .live-station-name {
+            font-size: 15px;
+            font-weight: 800;
+            color: #27ae60;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .route-table td, .route-table th {
-            padding: 4px 6px;
-            border-bottom: 1px solid var(--border-color);
-            text-align: left;
+        [data-theme="dark"] .live-station-name {
+            color: #2ecc71;
         }
 
-        .route-table th {
-            background: rgba(92, 49, 92, 0.1);
-            position: sticky;
-            top: 0;
+        .live-station-sub {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 3px;
         }
 
         .countdown-box {
@@ -439,44 +451,38 @@
             <h3 style="margin: 0; font-size: 18px; line-height: 1;">M5 Servis Dışı Durumları</h3> 
         </div>
         <div class="stations-grid">
-            <!-- Sol Sütun: Sultanbeyli Çıkışlı -->
+            <!-- Sol Sütun: Sultanbeyli Çıkışlı (Üsküdar Servis Dışı) -->
             <div class="station-card" id="sultanbeyli-card">
-                <h4>Üsküdar Servis Dışı</h4>
-                <span class="status-label" id="sultanbeyli-status">🟢 Normal</span>
-                <span class="next-time" id="sultanbeyli-next">Bekleniyor...</span>
-                <div class="all-times"><strong>Kalkış Saatleri:</strong> <span id="sultanbeyli-list"></span></div>
+                <div>
+                    <h4>Üsküdar Servis Dışı</h4>
+                    <span class="status-label" id="sultanbeyli-status">🟢 Normal</span>
+                    <span class="next-time" id="sultanbeyli-next">Bekleniyor...</span>
+                    <div class="all-times"><strong>Kalkış Saatleri:</strong> <span id="sultanbeyli-list"></span></div>
+                </div>
 
-                <details class="route-details" open>
-                    <summary>Tren Konum Detayları / Saatleri</summary>
-                    <div class="route-table-wrapper">
-                        <table class="route-table" id="sultanbeyli-route-table">
-                            <thead>
-                                <tr><th>İstasyon</th><th>Run No</th><th>Varış Saati</th></tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </details>
+                <!-- Sadece Anlık Konum Kutusu -->
+                <div class="live-position-box" id="sultanbeyli-live-box">
+                    <div class="live-position-header">📍 Mevcut Tren Konumu</div>
+                    <div class="live-station-name" id="sultanbeyli-live-station">Bekleniyor...</div>
+                    <div class="live-station-sub" id="sultanbeyli-live-desc">-</div>
+                </div>
             </div>
 
-            <!-- Sağ Sütun: Üsküdar Çıkışlı -->
+            <!-- Sağ Sütun: Üsküdar Çıkışlı (Sultanbeyli Servis Dışı) -->
             <div class="station-card" id="uskudar-card">
-                <h4>Sultanbeyli Servis Dışı</h4>
-                <span class="status-label" id="uskudar-status">🟢 Normal</span>
-                <span class="next-time" id="uskudar-next">Bekleniyor...</span>
-                <div class="all-times"><strong>Kalkış Saatleri:</strong> <span id="uskudar-list"></span></div>
+                <div>
+                    <h4>Sultanbeyli Servis Dışı</h4>
+                    <span class="status-label" id="uskudar-status">🟢 Normal</span>
+                    <span class="next-time" id="uskudar-next">Bekleniyor...</span>
+                    <div class="all-times"><strong>Kalkış Saatleri:</strong> <span id="uskudar-list"></span></div>
+                </div>
                 
-                <details class="route-details" open>
-                    <summary>Tren Konum Detayları / Saatleri</summary>
-                    <div class="route-table-wrapper">
-                        <table class="route-table" id="uskudar-route-table">
-                            <thead>
-                                <tr><th>İstasyon</th><th>Run No</th><th>Varış Saati</th></tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </details>
+                <!-- Sadece Anlık Konum Kutusu -->
+                <div class="live-position-box" id="uskudar-live-box">
+                    <div class="live-position-header">📍 Mevcut Tren Konumu</div>
+                    <div class="live-station-name" id="uskudar-live-station">Bekleniyor...</div>
+                    <div class="live-station-sub" id="uskudar-live-desc">-</div>
+                </div>
             </div>
         </div>
 
@@ -778,19 +784,85 @@
         return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
     }
 
-    function timeToMinutes(tStr) { const parts = tStr.split(":"); return parseInt(parts[0]) * 60 + parseInt(parts[1]); }
+    function timeToMinutes(tStr) { 
+        const parts = tStr.split(":"); 
+        return parseInt(parts[0]) * 60 + parseInt(parts[1]); 
+    }
 
-    function getNextTimeInfo(itemsArray, currentTimeStr) {
+    function getNextAlarmInfo(itemsArray, currentTimeStr) {
         let currentMinutes = timeToMinutes(currentTimeStr);
         let futureTimes = itemsArray.map(item => ({ 
             run: item.run,
-            time: item.alarmTime || item.time, 
-            mins: timeToMinutes(item.alarmTime || item.time) 
+            time: item.alarmTime, 
+            mins: timeToMinutes(item.alarmTime) 
         })).filter(item => item.mins >= currentMinutes);
 
         return futureTimes.length > 0 
             ? { run: futureTimes[0].run, next: futureTimes[0].time, diff: futureTimes[0].mins - currentMinutes } 
-            : { run: itemsArray[0].run, next: (itemsArray[0].alarmTime || itemsArray[0].time) + " (Yarın)", diff: -1 };
+            : { run: itemsArray[0].run, next: itemsArray[0].alarmTime + " (Yarın)", diff: -1 };
+    }
+
+    // SADECE MEVCUT KONUMU HESAPLAYAN VE GÜNCELLEYEN İŞLETME FONKSİYONU
+    function updateLivePositionDisplay(prefix, scheduleList, stationList, nowDate) {
+        const stationEl = document.getElementById(`${prefix}-live-station`);
+        const descEl = document.getElementById(`${prefix}-live-desc`);
+        
+        const nowSec = nowDate.getHours() * 3600 + nowDate.getMinutes() * 60 + nowDate.getSeconds();
+        const tripDurationSec = 2818; // ~47 dk toplam hat süresi
+
+        let activeRun = null;
+        let nextUpcomingRun = null;
+
+        // Hat üzerindeki aktif treni veya sonraki treni bul
+        for (let item of scheduleList) {
+            const [h, m] = item.time.split(":").map(Number);
+            const startSec = h * 3600 + m * 60;
+            const endSec = startSec + tripDurationSec;
+
+            if (nowSec >= startSec && nowSec <= endSec) {
+                activeRun = { ...item, startSec, endSec };
+                break;
+            } else if (startSec > nowSec && !nextUpcomingRun) {
+                nextUpcomingRun = { ...item, startSec };
+            }
+        }
+
+        if (activeRun) {
+            // Hat üzerinde hareket halinde tren var
+            for (let i = 0; i < stationList.length; i++) {
+                let st = stationList[i];
+                let currentStArrivalSec = activeRun.startSec + st.offset;
+                let nextSt = stationList[i + 1];
+
+                if (nextSt) {
+                    let nextStArrivalSec = activeRun.startSec + nextSt.offset;
+                    if (nowSec >= currentStArrivalSec && nowSec < nextStArrivalSec) {
+                        let remainingToNext = nextStArrivalSec - nowSec;
+                        let mins = Math.floor(remainingToNext / 60);
+                        let secs = remainingToNext % 60;
+                        
+                        stationEl.innerHTML = `🚆 ${st.name}`;
+                        descEl.innerHTML = `<strong>${activeRun.run}</strong> aktif hatta. Sonraki: <strong>${nextSt.name}</strong> (${mins > 0 ? mins + ' dk ' : ''}${secs} sn sonra)`;
+                        return;
+                    }
+                } else {
+                    // Son durak
+                    stationEl.innerHTML = `🏁 ${st.name} (Son İstasyon)`;
+                    descEl.innerHTML = `<strong>${activeRun.run}</strong> seferini tamamlamak üzere.`;
+                    return;
+                }
+            }
+        } else if (nextUpcomingRun) {
+            // Hat üzerinde tren yok, sıradaki tren bekleniyor
+            let diffSec = nextUpcomingRun.startSec - nowSec;
+            let diffMins = Math.floor(diffSec / 60);
+            stationEl.innerHTML = `⏳ ${stationList[0].name} (Kalkış Bekleniyor)`;
+            descEl.innerHTML = `Sıradaki <strong>${nextUpcomingRun.run}</strong> çıkışı: <strong>${nextUpcomingRun.time}</strong> (${diffMins} dk kaldı)`;
+        } else {
+            // Günlük seferler bitti
+            stationEl.innerHTML = `🌙 Seferler Tamamlandı`;
+            descEl.innerHTML = `Sıradaki sefer yarın <strong>${scheduleList[0].time}</strong> [${scheduleList[0].run}]`;
+        }
     }
 
     function updateCardStatus(cardId, statusId, diff) {
@@ -803,34 +875,12 @@
         else statusLabel.innerText = "🟢 Normal";
     }
 
-    function populateRouteTable(tableId, currentRunObj, stationList) {
-        const tbody = document.querySelector(`#${tableId} tbody`);
-        if (!tbody || !currentRunObj || !currentRunObj.time || currentRunObj.time.includes("Yarın")) {
-            if(tbody) tbody.innerHTML = "<tr><td colspan='3'>Aktif sefer yok</td></tr>";
-            return;
-        }
-
-        const cleanStartTime = currentRunObj.time.split(" ")[0];
-        const [hours, minutes] = cleanStartTime.split(":").map(Number);
-        const baseDate = new Date();
-        baseDate.setHours(hours, minutes, 0, 0);
-
-        let rowsHTML = "";
-        stationList.forEach(st => {
-            const arrivalDate = new Date(baseDate.getTime() + st.offset * 1000);
-            const formattedTime = arrivalDate.toTimeString().split(' ')[0];
-            rowsHTML += `<tr><td>${st.name}</td><td><strong>${currentRunObj.run || '-'}</strong></td><td><strong>${formattedTime}</strong></td></tr>`;
-        });
-
-        tbody.innerHTML = rowsHTML;
-    }
-
     function updateSystem() {
         const now = new Date();
         const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
         document.getElementById('current-date-time').innerText = `📅 ${now.toLocaleDateString('tr-TR')} | ⏰ ${timeStr}:${now.getSeconds().toString().padStart(2, '0')}`;
         
-        // Resmi Tatil Kontrolü
+        // Tatil Kontrolü
         const holidayName = checkPublicHoliday(now);
         const holidayBadgeContainer = document.getElementById('holiday-badge-container');
         if (holidayName) {
@@ -839,7 +889,7 @@
             holidayBadgeContainer.innerHTML = '';
         }
 
-        // Aktif Tarife / Gün Bilgisi
+        // Aktif Tarife
         const activeScheduleInfo = getActiveSchedule(now);
         document.getElementById('day-type-badge').innerText = activeScheduleInfo.labelMode;
         
@@ -851,24 +901,23 @@
         const sultanbeyliAlarmItems = activeSchedule.sultanbeyli.map(i => ({ run: i.run, time: i.time, alarmTime: addMinutesToTimeStr(i.time, 45) }));
         const uskudarAlarmItems = activeSchedule.uskudar.map(i => ({ run: i.run, time: i.time, alarmTime: addMinutesToTimeStr(i.time, 45) }));
 
-        const uskInfo = getNextTimeInfo(uskudarAlarmItems, timeStr);
-        const sulInfo = getNextTimeInfo(sultanbeyliAlarmItems, timeStr);
+        // Alarmlar ve kartlar
+        const uskAlarmInfo = getNextAlarmInfo(uskudarAlarmItems, timeStr);
+        const sulAlarmInfo = getNextAlarmInfo(sultanbeyliAlarmItems, timeStr);
         
-        document.getElementById('uskudar-next').innerText = `Sultanbeyli Servis Dışı Varış: ${uskInfo.next} [${uskInfo.run}]`;
-        document.getElementById('sultanbeyli-next').innerText = `Üsküdar Servis Dışı Varış: ${sulInfo.next} [${sulInfo.run}]`;
+        document.getElementById('uskudar-next').innerText = `Sultanbeyli Servis Dışı Varış: ${uskAlarmInfo.next} [${uskAlarmInfo.run}]`;
+        document.getElementById('sultanbeyli-next').innerText = `Üsküdar Servis Dışı Varış: ${sulAlarmInfo.next} [${sulAlarmInfo.run}]`;
         
-        updateCardStatus('uskudar-card', 'uskudar-status', uskInfo.diff);
-        updateCardStatus('sultanbeyli-card', 'sultanbeyli-status', sulInfo.diff);
+        updateCardStatus('uskudar-card', 'uskudar-status', uskAlarmInfo.diff);
+        updateCardStatus('sultanbeyli-card', 'sultanbeyli-status', sulAlarmInfo.diff);
 
-        const currentUskudarObj = getNextTimeInfo(activeSchedule.uskudar, timeStr);
-        const currentSultanbeyliObj = getNextTimeInfo(activeSchedule.sultanbeyli, timeStr);
-        
-        populateRouteTable("uskudar-route-table", currentUskudarObj, STATIONS_USKUDAR_TO_SULTANBEYLI);
-        populateRouteTable("sultanbeyli-route-table", currentSultanbeyliObj, STATIONS_SULTANBEYLI_TO_USKUDAR);
+        // Canlı Anlık Konum Bilgilerini Güncelle
+        updateLivePositionDisplay("uskudar", activeSchedule.uskudar, STATIONS_USKUDAR_TO_SULTANBEYLI, now);
+        updateLivePositionDisplay("sultanbeyli", activeSchedule.sultanbeyli, STATIONS_SULTANBEYLI_TO_USKUDAR, now);
         
         const countdownBox = document.getElementById('countdown-text');
-        if (uskInfo.diff >= 0 && sulInfo.diff >= 0) {
-            const minDiff = Math.min(uskInfo.diff, sulInfo.diff);
+        if (uskAlarmInfo.diff >= 0 && sulAlarmInfo.diff >= 0) {
+            const minDiff = Math.min(uskAlarmInfo.diff, sulAlarmInfo.diff);
             countdownBox.innerText = `Sonraki bildirim uyarısına yaklaşık ${minDiff} dakika kaldı.`;
         } else {
             countdownBox.innerText = `Bugünkü tüm servis dışı bildirimleri tamamlandı. Sonraki seferler yarın.`;
